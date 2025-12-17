@@ -159,7 +159,10 @@ export default function ModulePage({
           <>
             <h2 className="sub-header">Vocabulary & Phonics</h2>
             <p className="explanatory-text">
-              In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like "hot" or "ball"). This is represented in transliteration as 'o' or 'ô'.
+              {currentIndex >= 6 
+                ? "Bengali script distinguishes between short and long vowels (e.g., hroshwo-i and dirgho-i), but in modern colloquial speech, the length difference is negligible."
+                : "In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like \"hot\" or \"ball\"). This is represented in transliteration as 'o' or 'ô'."
+              }
             </p>
 
             {/* Exercise Display */}
