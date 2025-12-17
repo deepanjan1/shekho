@@ -8,6 +8,7 @@ interface ModulePageProps {
   phaseTitle: string
   moduleTitle: string
   onHomeClick: () => void
+  onModuleComplete?: (phaseIndex: number, moduleIndex: number) => void
 }
 
 type ExerciseItem = 
@@ -31,31 +32,91 @@ const exercises: ExerciseItem[] = [
   { type: 'word', bengali: 'এই বই', transliteration: 'Ei boi', english: 'This book' },
 ]
 
+const extendedExercises: ExerciseItem[] = [
+  { type: 'word', bengali: 'জল', transliteration: 'Jol', english: 'Water' },
+  { type: 'word', bengali: 'চা', transliteration: 'Cha', english: 'Tea' },
+  { type: 'word', bengali: 'ভালো', transliteration: 'Bhalo', english: 'Good / Well' },
+  { type: 'word', bengali: 'আর', transliteration: 'Ar', english: 'And' },
+  { type: 'word', bengali: 'এই মা', transliteration: 'Ei maa', english: 'This is mother.' },
+  { type: 'word', bengali: 'এই মা ভালো', transliteration: 'Ei maa bhalo', english: 'This mother is good.' },
+  { type: 'word', bengali: 'এই মা ভালো না', transliteration: 'Ei maa bhalo na', english: 'This mother is not good.' },
+  { type: 'word', bengali: 'ওই বাবা', transliteration: 'Oi baba', english: 'That is father.' },
+  { type: 'word', bengali: 'ওই বাবা ভালো', transliteration: 'Oi baba bhalo', english: 'That father is good.' },
+  { type: 'word', bengali: 'ওই বাবা ভালো না', transliteration: 'Oi baba bhalo na', english: 'That father is not good.' },
+]
+
 export default function ModulePage({
   phaseIndex,
   moduleIndex,
   phaseTitle: _phaseTitle,
   moduleTitle,
   onHomeClick,
+  onModuleComplete,
 }: ModulePageProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
+  const [isExtendedVocabulary, setIsExtendedVocabulary] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const currentItem = exercises[currentIndex]
+  const currentExercises = isExtendedVocabulary ? extendedExercises : exercises
+  const currentItem = currentExercises[currentIndex]
+
+  // Safety check - if currentItem doesn't exist, don't render content
+  if (!currentItem) {
+    return (
+      <div className="module-page">
+        <div className="module-header">
+          <button className="home-link" onClick={onHomeClick}>
+            Home
+          </button>
+          <div className="breadcrumb">
+            Phase {phaseIndex + 1} &gt; Module {moduleIndex + 1}
+          </div>
+        </div>
+        <div className="module-content">
+          <h1 className="module-title">{moduleTitle}</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleNext = () => {
-    if (currentIndex < exercises.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-      setIsFlipped(false)
+    if (isExtendedVocabulary) {
+      if (currentIndex < extendedExercises.length - 1) {
+        setCurrentIndex(currentIndex + 1)
+        setIsFlipped(false)
+      }
+    } else {
+      if (currentIndex < exercises.length - 1) {
+        setCurrentIndex(currentIndex + 1)
+        setIsFlipped(false)
+      } else {
+        // Move to extended vocabulary
+        setIsExtendedVocabulary(true)
+        setCurrentIndex(0)
+        setIsFlipped(false)
+      }
     }
   }
 
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-      setIsFlipped(false)
+    if (isExtendedVocabulary) {
+      if (currentIndex > 0) {
+        setCurrentIndex(currentIndex - 1)
+        setIsFlipped(false)
+      } else {
+        // Go back to main exercises
+        setIsExtendedVocabulary(false)
+        setCurrentIndex(exercises.length - 1)
+        setIsFlipped(false)
+      }
+    } else {
+      if (currentIndex > 0) {
+        setCurrentIndex(currentIndex - 1)
+        setIsFlipped(false)
+      }
     }
   }
 
@@ -93,6 +154,15 @@ export default function ModulePage({
     }
   }, [isFlipped, currentIndex]);
   // #endregion
+
+  const handleFinish = () => {
+    if (onModuleComplete) {
+      onModuleComplete(phaseIndex, moduleIndex)
+    }
+    onHomeClick()
+  }
+
+  const isLastExercise = isExtendedVocabulary && currentIndex === extendedExercises.length - 1
 
   const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card flip when clicking speaker
@@ -157,11 +227,15 @@ export default function ModulePage({
         
         {isPhase1Module1 && (
           <>
-            <h2 className="sub-header">Vocabulary & Phonics</h2>
+            <h2 className="sub-header">
+              {isExtendedVocabulary ? 'Extended Vocabulary' : 'Vocabulary & Phonics'}
+            </h2>
             <p className="explanatory-text">
-              {currentIndex >= 6 
-                ? "Bengali script distinguishes between short and long vowels (e.g., hroshwo-i and dirgho-i), but in modern colloquial speech, the length difference is negligible."
-                : "In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like \"hot\" or \"ball\"). This is represented in transliteration as 'o' or 'ô'."
+              {isExtendedVocabulary 
+                ? "Here are some excellent vocabulary words and exercises that logically extend the material and build toward the content in later modules."
+                : currentIndex >= 6 
+                  ? "Bengali script distinguishes between short and long vowels (e.g., hroshwo-i and dirgho-i), but in modern colloquial speech, the length difference is negligible."
+                  : "In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like \"hot\" or \"ball\"). This is represented in transliteration as 'o' or 'ô'."
               }
             </p>
 
@@ -190,9 +264,19 @@ export default function ModulePage({
                       Back
                     </button>
                   )}
-                  {currentIndex < exercises.length - 1 && (
+                  {!isLastExercise && currentIndex < currentExercises.length - 1 && (
                     <button className="next-button" onClick={handleNext}>
                       Next
+                    </button>
+                  )}
+                  {!isExtendedVocabulary && currentIndex === exercises.length - 1 && (
+                    <button className="next-button" onClick={handleNext}>
+                      Next
+                    </button>
+                  )}
+                  {isLastExercise && (
+                    <button className="finish-button" onClick={handleFinish}>
+                      Finish
                     </button>
                   )}
                 </div>
@@ -257,9 +341,19 @@ export default function ModulePage({
                       Back
                     </button>
                   )}
-                  {currentIndex < exercises.length - 1 && (
+                  {!isLastExercise && currentIndex < currentExercises.length - 1 && (
                     <button className="next-button" onClick={handleNext}>
                       Next
+                    </button>
+                  )}
+                  {!isExtendedVocabulary && currentIndex === exercises.length - 1 && (
+                    <button className="next-button" onClick={handleNext}>
+                      Next
+                    </button>
+                  )}
+                  {isLastExercise && (
+                    <button className="finish-button" onClick={handleFinish}>
+                      Finish
                     </button>
                   )}
                 </div>

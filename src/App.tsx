@@ -48,8 +48,37 @@ const phases: Phase[] = [
 type View = 'home' | { phaseIndex: number; moduleIndex: number }
 
 function App() {
-  const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set())
+  // Load from localStorage on mount
+  const savedCompleted = localStorage.getItem('completedModules')
+  const savedFocus = localStorage.getItem('currentFocus')
+  const completedSet: Set<string> = savedCompleted ? new Set(JSON.parse(savedCompleted) as string[]) : new Set()
+  
+  const [expandedPhases, setExpandedPhases] = useState<Set<number>>(() => {
+    // Auto-expand Phase 1 if there's progress
+    if (savedCompleted || savedFocus) {
+      return new Set([0])
+    }
+    return new Set()
+  })
   const [currentView, setCurrentView] = useState<View>('home')
+  const [completedModules, setCompletedModules] = useState<Set<string>>(completedSet)
+  const [currentFocus, setCurrentFocus] = useState<string>(() => {
+    // Load current focus from localStorage, or find next uncompleted module
+    if (savedFocus) {
+      return savedFocus
+    }
+    // If no saved focus, find first uncompleted module
+    for (let phaseIdx = 0; phaseIdx < phases.length; phaseIdx++) {
+      const phase = phases[phaseIdx]
+      for (let moduleIdx = 0; moduleIdx < phase.modules.length; moduleIdx++) {
+        const moduleKey = `${phaseIdx}-${moduleIdx}`
+        if (!completedSet.has(moduleKey)) {
+          return moduleKey
+        }
+      }
+    }
+    return '0-0'
+  })
 
   const togglePhase = (index: number) => {
     const newExpanded = new Set(expandedPhases)
@@ -62,10 +91,60 @@ function App() {
   }
 
   const handleModuleClick = (phaseIndex: number, moduleIndex: number) => {
-    // Only Phase 1, Module 1 is clickable
-    if (phaseIndex === 0 && moduleIndex === 0) {
+    // Phase 1, Module 1 is always clickable
+    // Phase 1, Module 2 is clickable if Module 1 is completed
+    const isModule1 = phaseIndex === 0 && moduleIndex === 0
+    const isModule2 = phaseIndex === 0 && moduleIndex === 1
+    const isModule1Completed = completedModules.has('0-0')
+    
+    if (isModule1 || (isModule2 && isModule1Completed)) {
       setCurrentView({ phaseIndex, moduleIndex })
     }
+  }
+
+  const handleModuleComplete = (phaseIndex: number, moduleIndex: number) => {
+    const moduleKey = `${phaseIndex}-${moduleIndex}`
+    const newCompleted = new Set(completedModules)
+    newCompleted.add(moduleKey)
+    setCompletedModules(newCompleted)
+    // Save to localStorage
+    localStorage.setItem('completedModules', JSON.stringify(Array.from(newCompleted)))
+    
+    // Find and set the next uncompleted module as focus
+    const nextModule = findNextUncompletedModule(phaseIndex, moduleIndex, newCompleted)
+    if (nextModule) {
+      setCurrentFocus(nextModule)
+      localStorage.setItem('currentFocus', nextModule)
+    }
+  }
+
+  const findNextUncompletedModule = (
+    currentPhaseIndex: number,
+    currentModuleIndex: number,
+    completed: Set<string>
+  ): string | null => {
+    // First, try to find next module in the same phase
+    const currentPhase = phases[currentPhaseIndex]
+    for (let i = currentModuleIndex + 1; i < currentPhase.modules.length; i++) {
+      const moduleKey = `${currentPhaseIndex}-${i}`
+      if (!completed.has(moduleKey)) {
+        return moduleKey
+      }
+    }
+    
+    // If no more modules in current phase, try next phase
+    for (let phaseIdx = currentPhaseIndex + 1; phaseIdx < phases.length; phaseIdx++) {
+      const phase = phases[phaseIdx]
+      for (let moduleIdx = 0; moduleIdx < phase.modules.length; moduleIdx++) {
+        const moduleKey = `${phaseIdx}-${moduleIdx}`
+        if (!completed.has(moduleKey)) {
+          return moduleKey
+        }
+      }
+    }
+    
+    // All modules completed
+    return null
   }
 
   const handleHomeClick = () => {
@@ -88,6 +167,7 @@ function App() {
         phaseTitle={phase.title}
         moduleTitle={moduleTitle}
         onHomeClick={handleHomeClick}
+        onModuleComplete={handleModuleComplete}
       />
     )
   }
@@ -114,14 +194,23 @@ function App() {
             {expandedPhases.has(index) && (
               <div className="modules-container">
                 {phase.modules.map((module, moduleIndex) => {
-                  const isClickable = index === 0 && moduleIndex === 0
+                  const moduleKey = `${index}-${moduleIndex}`
+                  const isCompleted = completedModules.has(moduleKey)
+                  const isModule1 = index === 0 && moduleIndex === 0
+                  const isModule2 = index === 0 && moduleIndex === 1
+                  const isModule1Completed = completedModules.has('0-0')
+                  const isClickable = isModule1 || (isModule2 && isModule1Completed)
+                  const isCurrentFocus = moduleKey === currentFocus
+                  
                   return (
                     <div
                       key={moduleIndex}
-                      className={isClickable ? 'module-item clickable' : 'module-item'}
+                      className={`module-item ${isClickable ? 'clickable' : ''} ${isCurrentFocus ? 'current-focus' : ''}`}
                       onClick={() => handleModuleClick(index, moduleIndex)}
                     >
-                      {!isClickable && <span className="lock-icon">🔒</span>}
+                      {isCompleted && <span className="check-icon">✓</span>}
+                      {!isClickable && !isCompleted && <span className="lock-icon">🔒</span>}
+                      {isCurrentFocus && !isCompleted && <span className="focus-indicator">→</span>}
                       {module}
                     </div>
                   )
