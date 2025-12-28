@@ -1,0 +1,363 @@
+.conversation-lesson {
+  padding-bottom: 2rem;
+}
+
+.lesson-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.image-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lesson-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.script-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.script-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.script-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.script-content {
+  padding: 1.25rem;
+}
+
+.script-line {
+  margin-bottom: 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.script-line:last-child {
+  margin-bottom: 0;
+}
+
+.speaker-label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.85rem;
+  min-width: 55px;
+}
+
+.text-group {
+  flex: 1;
+}
+
+.bengali-text {
+  font-size: 1.15rem;
+  color: #1a1a1a;
+  margin-bottom: 0.15rem;
+}
+
+.transliteration-text {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.english-text {
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.tap-hint {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.play-conversation-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: center;
+  width: 100%;
+  max-width: 220px;
+}
+
+.play-conversation-button:hover {
+  background: #2563eb;
+}
+
+.play-conversation-button:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.vocab-section {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+}
+
+/* Reuse flashcard styles from ModulePage or define similar ones here */
+.flashcards-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.flashcard-container {
+  width: 100%;
+  max-width: 350px;
+  height: 220px;
+  perspective: 1000px;
+}
+
+.flashcard-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+}
+
+.flashcard-bengali {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+  color: #1f2937;
+}
+
+.flashcard-transliteration {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin-bottom: 1.25rem;
+}
+
+.flashcard-english {
+  font-size: 1.35rem;
+  color: #1f2937;
+  padding: 0 1.5rem;
+}
+
+.flashcard-speaker-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.flashcard-speaker-button:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.flashcard-arrow-button {
+  position: absolute;
+  bottom: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.flashcard-arrow-button:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.flashcard-arrow-right {
+  right: 0.75rem;
+}
+
+.flashcard-arrow-left {
+  left: 0.75rem;
+}
+
+.progress-indicator {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #999;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.cl-navigation-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 350px;
+}
+
+.cl-navigation-buttons button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: 100%;
+}
+
+.cl-back-button {
+  background: transparent;
+  border: 2px solid #e5e7eb;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.cl-back-button:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #333;
+  border-color: #d1d5db;
+}
+
+.next-button {
+  background: #58cc02;
+  border: 2px solid #58cc02;
+  border-bottom: 4px solid #46a302;
+  color: white;
+}
+
+.next-button:hover:not(:disabled) {
+  background: #61e002;
+  border-color: #61e002;
+  transform: translateY(-1px);
+}
+
+.next-button:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 0;
+  margin-bottom: 4px;
+}
+
+.cl-navigation-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-bottom-width: 2px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.notes-section {
+  margin-top: 1rem;
+}
+
+.notes-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.notes-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.note-item {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+.note-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.2rem;
+  line-height: 1.2rem;
+}
+
+.note-item:last-child {
+  margin-bottom: 0;
+}

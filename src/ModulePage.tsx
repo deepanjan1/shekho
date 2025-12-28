@@ -7,6 +7,7 @@ interface ModulePageProps {
   moduleIndex: number
   phaseTitle: string
   moduleTitle: string
+  moduleSubtitle?: string
   onHomeClick: () => void
   onModuleComplete?: (phaseIndex: number, moduleIndex: number) => void
 }
@@ -45,11 +46,23 @@ const extendedExercises: ExerciseItem[] = [
   { type: 'word', bengali: 'ওই বাবা ভালো না', transliteration: 'Oi baba bhalo na', english: 'That father is not good.' },
 ]
 
+const module2Exercises: ExerciseItem[] = [
+  { type: 'word', bengali: 'তুই', transliteration: 'Tui', english: 'you (inferior)' },
+  { type: 'word', bengali: 'তুমি', transliteration: 'Tumi', english: 'you (equal)' },
+  { type: 'word', bengali: 'আপনি', transliteration: 'Apni', english: 'you (formal)' },
+  { type: 'word', bengali: 'আমি', transliteration: 'Ami', english: 'I' },
+  { type: 'word', bengali: 'আমরা', transliteration: 'Amra', english: 'We' },
+  { type: 'word', bengali: 'এ', transliteration: 'E', english: 'He/She (This person)' },
+  { type: 'word', bengali: 'সে', transliteration: 'Se', english: 'He/She (That person)' },
+  { type: 'word', bengali: 'তিনি', transliteration: 'Tini', english: 'He/She (Respectful)' },
+]
+
 export default function ModulePage({
   phaseIndex,
   moduleIndex,
   phaseTitle: _phaseTitle,
   moduleTitle,
+  moduleSubtitle,
   onHomeClick,
   onModuleComplete,
 }: ModulePageProps) {
@@ -59,7 +72,19 @@ export default function ModulePage({
   const [isExtendedVocabulary, setIsExtendedVocabulary] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const currentExercises = isExtendedVocabulary ? extendedExercises : exercises
+  // Determine which exercises to use based on module
+  const isPhase1Module1 = phaseIndex === 0 && moduleIndex === 0
+  const isPhase1Module2 = phaseIndex === 0 && moduleIndex === 1
+  
+  let currentExercises: ExerciseItem[]
+  if (isPhase1Module1) {
+    currentExercises = isExtendedVocabulary ? extendedExercises : exercises
+  } else if (isPhase1Module2) {
+    currentExercises = module2Exercises
+  } else {
+    currentExercises = []
+  }
+  
   const currentItem = currentExercises[currentIndex]
 
   // Safety check - if currentItem doesn't exist, don't render content
@@ -83,36 +108,50 @@ export default function ModulePage({
   }
 
   const handleNext = () => {
-    if (isExtendedVocabulary) {
-      if (currentIndex < extendedExercises.length - 1) {
-        setCurrentIndex(currentIndex + 1)
-        setIsFlipped(false)
-      }
-    } else {
-      if (currentIndex < exercises.length - 1) {
-        setCurrentIndex(currentIndex + 1)
-        setIsFlipped(false)
+    if (isPhase1Module1) {
+      if (isExtendedVocabulary) {
+        if (currentIndex < extendedExercises.length - 1) {
+          setCurrentIndex(currentIndex + 1)
+          setIsFlipped(false)
+        }
       } else {
-        // Move to extended vocabulary
-        setIsExtendedVocabulary(true)
-        setCurrentIndex(0)
+        if (currentIndex < exercises.length - 1) {
+          setCurrentIndex(currentIndex + 1)
+          setIsFlipped(false)
+        } else {
+          // Move to extended vocabulary
+          setIsExtendedVocabulary(true)
+          setCurrentIndex(0)
+          setIsFlipped(false)
+        }
+      }
+    } else if (isPhase1Module2) {
+      if (currentIndex < module2Exercises.length - 1) {
+        setCurrentIndex(currentIndex + 1)
         setIsFlipped(false)
       }
     }
   }
 
   const handlePrev = () => {
-    if (isExtendedVocabulary) {
-      if (currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1)
-        setIsFlipped(false)
+    if (isPhase1Module1) {
+      if (isExtendedVocabulary) {
+        if (currentIndex > 0) {
+          setCurrentIndex(currentIndex - 1)
+          setIsFlipped(false)
+        } else {
+          // Go back to main exercises
+          setIsExtendedVocabulary(false)
+          setCurrentIndex(exercises.length - 1)
+          setIsFlipped(false)
+        }
       } else {
-        // Go back to main exercises
-        setIsExtendedVocabulary(false)
-        setCurrentIndex(exercises.length - 1)
-        setIsFlipped(false)
+        if (currentIndex > 0) {
+          setCurrentIndex(currentIndex - 1)
+          setIsFlipped(false)
+        }
       }
-    } else {
+    } else if (isPhase1Module2) {
       if (currentIndex > 0) {
         setCurrentIndex(currentIndex - 1)
         setIsFlipped(false)
@@ -162,10 +201,14 @@ export default function ModulePage({
     onHomeClick()
   }
 
-  const isLastExercise = isExtendedVocabulary && currentIndex === extendedExercises.length - 1
+  const isLastExercise = isPhase1Module1 
+    ? (isExtendedVocabulary && currentIndex === extendedExercises.length - 1)
+    : (isPhase1Module2 && currentIndex === module2Exercises.length - 1)
 
   const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card flip when clicking speaker
+    
+    if (!currentItem) return // Safety check
     
     const textToSpeak = currentItem.bengali
     
@@ -209,8 +252,8 @@ export default function ModulePage({
     }
   }
 
-  // Only show Phase 1, Module 1 content
-  const isPhase1Module1 = phaseIndex === 0 && moduleIndex === 0
+  // Check if we should show content for this module
+  const shouldShowContent = isPhase1Module1 || isPhase1Module2
 
   return (
     <div className="module-page">
@@ -224,20 +267,27 @@ export default function ModulePage({
       </div>
       <div className="module-content">
         <h1 className="module-title">{moduleTitle}</h1>
+        {moduleSubtitle && (
+          <p className="module-subtitle">{moduleSubtitle}</p>
+        )}
         
-        {isPhase1Module1 && (
+        {shouldShowContent && currentItem && (
           <>
-            <h2 className="sub-header">
-              {isExtendedVocabulary ? 'Extended Vocabulary' : 'Vocabulary & Phonics'}
-            </h2>
-            <p className="explanatory-text">
-              {isExtendedVocabulary 
-                ? "Here are some excellent vocabulary words and exercises that logically extend the material and build toward the content in later modules."
-                : currentIndex >= 6 
-                  ? "Bengali script distinguishes between short and long vowels (e.g., hroshwo-i and dirgho-i), but in modern colloquial speech, the length difference is negligible."
-                  : "In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like \"hot\" or \"ball\"). This is represented in transliteration as 'o' or 'ô'."
-              }
-            </p>
+            {isPhase1Module1 && (
+              <>
+                <h2 className="sub-header">
+                  {isExtendedVocabulary ? 'Extended Vocabulary' : 'Vocabulary & Phonics'}
+                </h2>
+                <p className="explanatory-text">
+                  {isExtendedVocabulary 
+                    ? "Here are some excellent vocabulary words and exercises that logically extend the material and build toward the content in later modules."
+                    : currentIndex >= 6 
+                      ? "Bengali script distinguishes between short and long vowels (e.g., hroshwo-i and dirgho-i), but in modern colloquial speech, the length difference is negligible."
+                      : "In Bengali, consonants carry an inherent vowel sound, typically pronounced as a rounded 'aw' (like \"hot\" or \"ball\"). This is represented in transliteration as 'o' or 'ô'."
+                  }
+                </p>
+              </>
+            )}
 
             {/* Exercise Display */}
             {currentItem.type === 'letter' ? (
@@ -269,7 +319,7 @@ export default function ModulePage({
                       Next
                     </button>
                   )}
-                  {!isExtendedVocabulary && currentIndex === exercises.length - 1 && (
+                  {isPhase1Module1 && !isExtendedVocabulary && currentIndex === exercises.length - 1 && (
                     <button className="next-button" onClick={handleNext}>
                       Next
                     </button>
@@ -281,7 +331,7 @@ export default function ModulePage({
                   )}
                 </div>
               </div>
-            ) : (
+            ) : currentItem ? (
               <div className="flashcards-section">
                 <div className="flashcard-container" data-testid="flashcard-container">
                   <div className="flashcard-content">
@@ -358,7 +408,7 @@ export default function ModulePage({
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>

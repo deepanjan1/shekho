@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import './App.css'
 import ModulePage from './ModulePage'
+import ConversationMode from './ConversationMode'
+import ConversationLesson from './ConversationLesson'
 
 interface Phase {
   title: string
@@ -45,7 +47,12 @@ const phases: Phase[] = [
   },
 ]
 
-type View = 'home' | { phaseIndex: number; moduleIndex: number }
+type View = 
+  | 'landing' 
+  | 'grammar-home' 
+  | 'conversation-mode' 
+  | { phaseIndex: number; moduleIndex: number }
+  | { type: 'conversation-lesson'; lessonId: number }
 
 function App() {
   // Load from localStorage on mount
@@ -60,7 +67,7 @@ function App() {
     }
     return new Set()
   })
-  const [currentView, setCurrentView] = useState<View>('home')
+  const [currentView, setCurrentView] = useState<View>('landing')
   const [completedModules, setCompletedModules] = useState<Set<string>>(completedSet)
   const [currentFocus, setCurrentFocus] = useState<string>(() => {
     // Load current focus from localStorage, or find next uncompleted module
@@ -91,15 +98,16 @@ function App() {
   }
 
   const handleModuleClick = (phaseIndex: number, moduleIndex: number) => {
-    // Phase 1, Module 1 is always clickable
-    // Phase 1, Module 2 is clickable if Module 1 is completed
-    const isModule1 = phaseIndex === 0 && moduleIndex === 0
-    const isModule2 = phaseIndex === 0 && moduleIndex === 1
-    const isModule1Completed = completedModules.has('0-0')
-    
-    if (isModule1 || (isModule2 && isModule1Completed)) {
-      setCurrentView({ phaseIndex, moduleIndex })
-    }
+    // All modules are clickable
+    setCurrentView({ phaseIndex, moduleIndex })
+  }
+
+  const handleConversationLessonSelect = (lessonId: number) => {
+    setCurrentView({ type: 'conversation-lesson', lessonId })
+  }
+
+  const handleBackToConversationMode = () => {
+    setCurrentView('conversation-mode')
   }
 
   const handleModuleComplete = (phaseIndex: number, moduleIndex: number) => {
@@ -148,11 +156,15 @@ function App() {
   }
 
   const handleHomeClick = () => {
-    setCurrentView('home')
+    setCurrentView('grammar-home')
+  }
+
+  const handleBackToLanding = () => {
+    setCurrentView('landing')
   }
 
   // If we're viewing a module, show the module page
-  if (currentView !== 'home') {
+  if (typeof currentView === 'object' && 'phaseIndex' in currentView) {
     const { phaseIndex, moduleIndex } = currentView
     const phase = phases[phaseIndex]
     // Use specific title for Phase 1, Module 1 as requested
@@ -160,21 +172,80 @@ function App() {
       ? 'The Soundscape of Bengali - Vowel and Phonics'
       : phase.modules[moduleIndex].replace(/^Module \d+: /, '')
     
+    // Add subtitle for Phase 1, Module 2
+    const moduleSubtitle = phaseIndex === 0 && moduleIndex === 1
+      ? "To navigate the complex social hierarchy of Bengali pronouns. This is the single most critical module for social integration. Unlike English \"You,\" Bengali has three distinct tiers: Tui, Tumi, and Apni."
+      : undefined
+    
     return (
       <ModulePage
         phaseIndex={phaseIndex}
         moduleIndex={moduleIndex}
         phaseTitle={phase.title}
         moduleTitle={moduleTitle}
+        moduleSubtitle={moduleSubtitle}
         onHomeClick={handleHomeClick}
         onModuleComplete={handleModuleComplete}
       />
     )
   }
 
+  if (currentView === 'conversation-mode') {
+    return (
+      <ConversationMode 
+        onBack={handleBackToLanding}
+        onLessonSelect={handleConversationLessonSelect}
+      />
+    )
+  }
+
+  if (typeof currentView === 'object' && 'type' in currentView && currentView.type === 'conversation-lesson') {
+    return (
+      <ConversationLesson 
+        lessonId={currentView.lessonId}
+        onBack={handleBackToConversationMode}
+      />
+    )
+  }
+
+  if (currentView === 'landing') {
+    return (
+      <div className="app landing-page">
+        <header className="header">
+          <h1 className="title">Shekho</h1>
+          <p className="subtitle">Learn Bengali</p>
+        </header>
+        <main className="main-content landing-content">
+          <div className="hero-image-container">
+            <img src="/animals.png" alt="Bengali Wildlife" className="hero-image" />
+          </div>
+          
+          <div className="mode-selection">
+            <button 
+              className="mode-card"
+              onClick={() => setCurrentView('conversation-mode')}
+            >
+              <h2 className="mode-title">Conversation Mode</h2>
+              <p className="mode-caption">Learn Bengali through typical conversations</p>
+            </button>
+
+            <button 
+              className="mode-card"
+              onClick={() => setCurrentView('grammar-home')}
+            >
+              <h2 className="mode-title">Grammar, Vocab Mode</h2>
+              <p className="mode-caption">Learn Bengali through grammar rules and slow vocab building</p>
+            </button>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       <header className="header">
+        <button className="back-button" onClick={handleBackToLanding}>← Back</button>
         <h1 className="title">Shekho</h1>
         <p className="subtitle">Learn Bengali</p>
       </header>
@@ -196,20 +267,15 @@ function App() {
                 {phase.modules.map((module, moduleIndex) => {
                   const moduleKey = `${index}-${moduleIndex}`
                   const isCompleted = completedModules.has(moduleKey)
-                  const isModule1 = index === 0 && moduleIndex === 0
-                  const isModule2 = index === 0 && moduleIndex === 1
-                  const isModule1Completed = completedModules.has('0-0')
-                  const isClickable = isModule1 || (isModule2 && isModule1Completed)
                   const isCurrentFocus = moduleKey === currentFocus
                   
                   return (
                     <div
                       key={moduleIndex}
-                      className={`module-item ${isClickable ? 'clickable' : ''} ${isCurrentFocus ? 'current-focus' : ''}`}
+                      className={`module-item clickable ${isCurrentFocus ? 'current-focus' : ''}`}
                       onClick={() => handleModuleClick(index, moduleIndex)}
                     >
                       {isCompleted && <span className="check-icon">✓</span>}
-                      {!isClickable && !isCompleted && <span className="lock-icon">🔒</span>}
                       {isCurrentFocus && !isCompleted && <span className="focus-indicator">→</span>}
                       {module}
                     </div>
